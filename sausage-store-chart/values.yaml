@@ -143,6 +143,7 @@ infra:
         cpu: 400m
         memory: 256Mi
     env:
+      MONGO_INITDB_DATABASE: sausage-store
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
       MONGO_INITDB_USERNAME: reports

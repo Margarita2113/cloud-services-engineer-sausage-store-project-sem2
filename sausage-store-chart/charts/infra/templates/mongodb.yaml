@@ -6,7 +6,7 @@ metadata:
     helm.sh/hook-weight: "-5"
 spec:
   serviceName: mongodb
-  replicas: 1
+  replicas: {{ .Values.mongodb.replicas }}
   selector:
     matchLabels:
       app: mongodb
@@ -17,18 +17,27 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: mongo:7.0
-        envFrom:
-          - configMapRef:
-              name: mongodb-conf
+        image: {{ .Values.mongodb.image }}
+        env:
+          - name: MONGO_INITDB_DATABASE
+            valueFrom:
+              configMapKeyRef:
+                name: mongodb-conf
+                key: MONGO_INITDB_DATABASE
+          - name: MONGO_INITDB_ROOT_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: mongodb-conf
+                key: MONGO_INITDB_ROOT_USERNAME
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-secret
+                key: MONGO_INITDB_ROOT_PASSWORD
         ports:
         - containerPort: {{ .Values.mongodb.containerPort }}
         resources:
-          requests:
-            memory: "128Mi"
-            cpu: "50m"
-          limits:
-            memory: "256Mi"
+{{ toYaml .Values.mongodb.resources | indent 10 }}
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
@@ -60,5 +69,16 @@ kind: ConfigMap
 metadata:
   name: mongodb-conf
 data:
-  MONGO_INITDB_ROOT_USERNAME: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_USERNAME }}
-  MONGO_INITDB_ROOT_PASSWORD: {{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD }}
+  MONGO_INITDB_DATABASE: "{{ .Values.mongodb.env.MONGO_INITDB_DATABASE }}"
+  MONGO_INITDB_ROOT_USERNAME: "{{ .Values.mongodb.env.MONGO_INITDB_ROOT_USERNAME }}"
+  MONGO_INITDB_USERNAME: "{{ .Values.mongodb.env.MONGO_INITDB_USERNAME }}"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-secret
+type: Opaque
+stringData:
+  MONGO_INITDB_ROOT_PASSWORD: "{{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD }}"
+  MONGO_INITDB_PASSWORD: "{{ .Values.mongodb.env.MONGO_INITDB_PASSWORD }}"

@@ -4,4 +4,4 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-{{ .Chart.Name }}-conf
 data:
-  PORT: "{{ .Values.env.port }}"
+  PORT: "{{ .Values.config.port }}"

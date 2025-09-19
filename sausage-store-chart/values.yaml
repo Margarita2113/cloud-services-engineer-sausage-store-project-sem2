@@ -15,7 +15,8 @@ frontend:
   service:
     port: 80
   ingress:
-    host: front-margo.students-projects.ru # Корректный домен будет указан в задании
+    host: front-margo.2sem.students-projects.ru # Корректный домен будет указан в задании
+    secretName: 2sem-students-projects-wildcard-secret
     path: /
     pathType: Prefix
   containerPort: 80
@@ -88,7 +89,7 @@ backend-report:
   replicas: 1
   strategy:
     type: Recreate
-  image: d1zero/sausage-backend-report:latest
+  image: fuller2113/sausage-backend-report:latest
   service:
     port: 8080
   config:
@@ -132,6 +133,7 @@ infra:
       POSTGRES_DATA: /var/lib/postgresql/data/pgdata
     containerPort: 5432
   mongodb:
+    replicas: 1
     image: mongo:7.0
     resources:
       requests:
@@ -143,4 +145,15 @@ infra:
     env:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_USERNAME: reports
+      MONGO_INITDB_PASSWORD: reportspassword
     containerPort: 27017
+  mongodbInit:
+    image: mongo:8.0.9
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 50m
+        memory: 128Mi

@@ -121,7 +121,7 @@ spec:
             - "--eval"
             - |
               db = db.getSiblingDB('$(MONGO_INITDB_DATABASE)');
-              if (db.getUser("testuser") == null) {
+              if (db.getUser("$(MONGO_INITDB_USERNAME)") == null) {
                 db.createUser({
                   user: "$(MONGO_INITDB_USERNAME)",
                   pwd: "$(MONGO_INITDB_PASSWORD)",

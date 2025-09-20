@@ -85,7 +85,7 @@ jobs:
       - name: Push Helm chart to Nexus using cm-push
         run: |
           cd ./packages
-          helm cm-push --context-path="/repository/$NEXUS_HELM_REPO" *.tgz nexus
+          helm cm-push --context-path="/repository/fuller2113" *.tgz nexus
 
   # Деплоим приложения в кластер Kubernetes с помощью helm-чарт
 #  deploy_helm_chart_to_kubernetes:

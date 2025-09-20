@@ -29,11 +29,21 @@ spec:
               configMapKeyRef:
                 name: mongodb-conf
                 key: MONGO_INITDB_ROOT_USERNAME
+          - name: MONGO_INITDB_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                name: mongodb-conf
+                key: MONGO_INITDB_USERNAME
           - name: MONGO_INITDB_ROOT_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: mongodb-secret
                 key: MONGO_INITDB_ROOT_PASSWORD
+          - name: MONGO_INITDB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-secret
+                key: MONGO_INITDB_PASSWORD
         ports:
         - containerPort: {{ .Values.mongodb.containerPort }}
         resources:
@@ -82,3 +92,44 @@ type: Opaque
 stringData:
   MONGO_INITDB_ROOT_PASSWORD: "{{ .Values.mongodb.env.MONGO_INITDB_ROOT_PASSWORD }}"
   MONGO_INITDB_PASSWORD: "{{ .Values.mongodb.env.MONGO_INITDB_PASSWORD }}"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-init-user
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "0"
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mongo-init
+          image: {{ .Values.mongodbInit.image }}
+          command:
+            - "mongosh"
+            - "--host"
+            - "mongodb"
+            - "-u"
+            - "$(MONGO_INITDB_ROOT_USERNAME)"
+            - "-p"
+            - "$(MONGO_INITDB_ROOT_PASSWORD)"
+            - "--authenticationDatabase"
+            - "admin"
+            - "--eval"
+            - |
+              db = db.getSiblingDB('$(MONGO_INITDB_DATABASE)');
+              db.createUser({
+                user: "$(MONGO_INITDB_USERNAME)",
+                pwd: "$(MONGO_INITDB_PASSWORD)",
+                roles: [ { role: "readWrite", db: "$(MONGO_INITDB_DATABASE)" } ]
+              });
+          envFrom:
+            - configMapRef:
+                name: mongodb-conf
+            - secretRef:
+                name: mongodb-secret
+          resources:
+{{ toYaml .Values.mongodbInit.resources | indent 12 }}
